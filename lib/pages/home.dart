@@ -33,6 +33,10 @@ class _HomePageState extends State<HomePage> {
       child: TextField(
         decoration: InputDecoration(
             filled: true,
+            prefixIcon: const Padding(
+              padding: EdgeInsets.all(0),
+              child: Icon(Icons.search),
+            ),
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.all(15),
             hintText: 'Search',

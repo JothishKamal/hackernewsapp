@@ -1,5 +1,3 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -8,13 +6,13 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   final List<String> sortByList = ['Top', 'New', 'Best'];
   String? sortBy = 'New';
-  List<dynamic> stories = [];
+  final List<dynamic> stories = [];
   int numberOfStoriesToShow = 10;
 
   @override
@@ -29,7 +27,7 @@ class _HomePageState extends State<HomePage> {
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       setState(() {
-        stories = data.cast<dynamic>();
+        stories.addAll(data.cast<dynamic>());
       });
     } else {
       throw Exception('Failed to fetch stories');

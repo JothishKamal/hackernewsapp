@@ -1,5 +1,6 @@
-import 'dart:convert';
+// ignore_for_file: library_private_types_in_public_api
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -7,13 +8,14 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   final List<String> sortByList = ['Top', 'New', 'Best'];
   String? sortBy = 'New';
   List<dynamic> stories = [];
+  int numberOfStoriesToShow = 10;
 
   @override
   void initState() {
@@ -34,8 +36,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _loadMoreStories() {
+    setState(() {
+      numberOfStoriesToShow += 10;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    List<dynamic> storiesToShow = stories.take(numberOfStoriesToShow).toList();
+
     return Scaffold(
       appBar: _appBar(),
       body: Center(
@@ -52,7 +62,7 @@ class _HomePageState extends State<HomePage> {
             ),
             Expanded(
               child: ListView.separated(
-                itemCount: stories.length,
+                itemCount: storiesToShow.length,
                 separatorBuilder: (context, index) => const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 10.0),
                   child: Divider(),
@@ -62,6 +72,13 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ),
+            if (numberOfStoriesToShow < stories.length)
+              Center(
+                child: ElevatedButton(
+                  onPressed: _loadMoreStories,
+                  child: const Text('Load More'),
+                ),
+              ),
           ],
         ),
       ),
@@ -103,6 +120,7 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 sortBy = value;
               });
+              numberOfStoriesToShow = 10;
               _fetchStories(value);
             },
           ),
@@ -112,15 +130,47 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _storyCard(int index) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      child: ListTile(
-        title: Text(
-          'Story Title ${stories[index]}',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text('By: Author $index'),
-        onTap: () {},
+    Future<Map<String, dynamic>> fetchStory(int id) async {
+      final response = await http.get(
+        Uri.parse('https://hacker-news.firebaseio.com/v0/item/$id.json'),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch story');
+      }
+    }
+
+    return SizedBox(
+      height: 100,
+      child: FutureBuilder<Map<String, dynamic>>(
+        future: fetchStory(stories[index] as int),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            final result = snapshot.data!;
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: ListTile(
+                title: Text(
+                  "${result['title']}",
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
+                subtitle: Text(
+                  'By: ${result['by']}',
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () {},
+              ),
+            );
+          }
+        },
       ),
     );
   }

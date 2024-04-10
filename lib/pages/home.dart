@@ -78,39 +78,55 @@ class _HomePageState extends State<HomePage> {
 
   Drawer _buildDrawer() {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
         children: [
-          
-          ListTile(
-            leading: const Icon(Icons.home),
-            title: const Text('Home'),
-            onTap: () {
-              setState(() {
-                _selectedIndex = 0;
-              });
-              Navigator.pop(context); 
-            },
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.home),
+                  title: const Text('Home'),
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 0;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.favorite),
+                  title: const Text('Favorites'),
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 1;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.cloud_download),
+                  title: const Text('Offline Reading'),
+                  onTap: () {
+                    setState(() {
+                      _selectedIndex = 2;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
           ),
-          ListTile(
-            leading: const Icon(Icons.favorite),
-            title: const Text('Favorites'),
-            onTap: () {
-              setState(() {
-                _selectedIndex = 1;
-              });
-              Navigator.pop(context); 
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.cloud_download),
-            title: const Text('Offline Reading'),
-            onTap: () {
-              setState(() {
-                _selectedIndex = 2;
-              });
-              Navigator.pop(context); 
-            },
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Designed with ❤️ by Jo',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.blueGrey,
+              ),
+            ),
           ),
         ],
       ),
@@ -236,13 +252,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onStoryTap(Map<String, dynamic> result) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => StoryDetailsPage(result: result),
-    ),
-  );
-}
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StoryDetailsPage(result: result),
+      ),
+    );
+  }
 
   Widget _buildStoryCard(Map<String, dynamic> result, int storyId) {
     bool isFavorite = favoriteStories.contains(storyId);
@@ -277,22 +293,23 @@ class _HomePageState extends State<HomePage> {
               '${result['descendants']} comments',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
-              onPressed: () {
-                _toggleFavorite(storyId);
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.cloud_download),
-              onPressed: () {
-                // TODO: Cache stories for offline reading
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  icon:
+                      Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+                  onPressed: () {
+                    _toggleFavorite(storyId);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.cloud_download),
+                  onPressed: () {
+                    // TODO: Cache stories for offline reading
+                  },
+                ),
+              ],
             ),
           ],
         ),

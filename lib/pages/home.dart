@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hackernews/pages/favorites.dart';
+import 'package:hackernews/pages/offline.dart';
 import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
@@ -11,30 +12,37 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late String sortBy;
   final List<String> sortByList = ['Top', 'New', 'Best'];
-  String? sortBy = 'New';
   final Map<int, Map<String, dynamic>> storiesMap = {};
   final List<int> stories = [];
   int numberOfStoriesToShow = 10;
   Set<int> favoriteStories = <int>{};
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    sortBy = 'New';
     _fetchStories(sortBy);
   }
 
-  void _fetchStories(String? sortBy) async {
+  void _fetchStories(String sortBy) async {
     final response = await http.get(Uri.parse(
-        'https://hacker-news.firebaseio.com/v0/${sortBy!.toLowerCase()}stories.json'));
+        'https://hacker-news.firebaseio.com/v0/${sortBy.toLowerCase()}stories.json'));
     if (response.statusCode == 200) {
       final List<int> data = List<int>.from(jsonDecode(response.body));
       setState(() {
         stories.addAll(data);
       });
     } else {
-      throw Exception('Failed to fetch stories');
+      _showError('Failed to fetch stories');
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _loadMoreStories() {
@@ -55,40 +63,98 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    List<int> storiesToShow = stories.take(numberOfStoriesToShow).toList();
+    final List<NavigationRailDestination> navigationRailItems = [
+      const NavigationRailDestination(
+        icon: Icon(Icons.home),
+        label: SizedBox(),
+      ),
+      const NavigationRailDestination(
+        icon: Icon(Icons.favorite),
+        label: SizedBox(),
+      ),
+      const NavigationRailDestination(
+        icon: Icon(Icons.cloud_download),
+        label: SizedBox(),
+      ),
+    ];
 
     return Scaffold(
       appBar: _appBar(),
-      body: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _searchField(),
-            const SizedBox(height: 20),
-            _sortByDB(),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView.separated(
-                itemCount: storiesToShow.length,
-                separatorBuilder: (context, index) => const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Divider(),
-                ),
-                itemBuilder: (context, index) {
-                  return _storyCard(storiesToShow[index]);
-                },
-              ),
+      body: Row(
+        children: [
+          SizedBox(
+            width: 64,
+            child: NavigationRail(
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (int index) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+              },
+              labelType: NavigationRailLabelType.selected,
+              destinations: navigationRailItems,
             ),
-            if (numberOfStoriesToShow < stories.length)
-              Center(
-                child: ElevatedButton(
-                  onPressed: _loadMoreStories,
-                  child: const Text('Load More'),
-                ),
-              ),
-          ],
-        ),
+          ),
+          const VerticalDivider(thickness: 1, width: 1),
+          Expanded(
+            child: Center(
+              child: _buildContent(),
+            ),
+          )
+        ],
       ),
+    );
+  }
+
+  Widget _buildContent() {
+    List<int> storiesToShow = stories.take(numberOfStoriesToShow).toList();
+
+    switch (_selectedIndex) {
+      case 0:
+        return homePage(storiesToShow);
+      case 1:
+        return FavoritesPage(
+          favoriteStories: favoriteStories,
+          storiesMap: storiesMap,
+        ); // TODO: Create FavoritesPage widget
+      case 2:
+        return OfflinePage(
+          offlineStories: favoriteStories,
+          storiesMap: storiesMap,
+        ); // TODO: Create OfflineReadingPage widget
+      default:
+        return const Text('Error');
+    }
+  }
+
+  Column homePage(List<int> storiesToShow) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _searchField(),
+        const SizedBox(height: 20),
+        _sortByDB(),
+        const SizedBox(height: 20),
+        Expanded(
+          child: ListView.separated(
+            itemCount: storiesToShow.length,
+            separatorBuilder: (context, index) => const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              child: Divider(),
+            ),
+            itemBuilder: (context, index) {
+              return _storyCard(storiesToShow[index]);
+            },
+          ),
+        ),
+        if (numberOfStoriesToShow < stories.length)
+          Center(
+            child: ElevatedButton(
+              onPressed: _loadMoreStories,
+              child: const Text('Load More'),
+            ),
+          ),
+      ],
     );
   }
 
@@ -125,11 +191,11 @@ class _HomePageState extends State<HomePage> {
             }).toList(),
             onChanged: (String? value) {
               setState(() {
-                sortBy = value;
+                sortBy = value!;
               });
               stories.clear();
               numberOfStoriesToShow = 10;
-              _fetchStories(value);
+              _fetchStories(value!);
             },
           ),
         ),

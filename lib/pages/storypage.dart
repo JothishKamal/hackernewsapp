@@ -1,15 +1,22 @@
 import 'dart:convert';
+import 'package:hackernews/pages/userpage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
+import 'package:intl/intl.dart';
 
 import 'package:hackernews/models/comment.dart';
 
-class StoryDetailsPage extends StatelessWidget {
+class StoryDetailsPage extends StatefulWidget {
   final Map<String, dynamic> result;
   const StoryDetailsPage({super.key, required this.result});
 
+  @override
+  State<StoryDetailsPage> createState() => _StoryDetailsPageState();
+}
+
+class _StoryDetailsPageState extends State<StoryDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -20,10 +27,23 @@ class StoryDetailsPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(10.0),
               child: Text(
-                '${result['title']}',
+                '${widget.result['title']}',
                 style: const TextStyle(
                   fontSize: 24,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _onUserTap(widget.result['by']),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 10.0),
+                child: Text(
+                  'By ${widget.result['by']}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
@@ -40,11 +60,11 @@ class StoryDetailsPage extends StatelessWidget {
                   ),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => _launchURL(result['url']),
+                      onTap: () => _launchURL(widget.result['url']),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10.0),
                         child: Text(
-                          '${result['url']}',
+                          '${widget.result['url']}',
                           style: const TextStyle(
                             color: Colors.blue,
                             fontSize: 16,
@@ -69,7 +89,7 @@ class StoryDetailsPage extends StatelessWidget {
                         color: Colors.black),
                   ),
                   Text(
-                    '${result['descendants']}',
+                    '${widget.result['descendants']}',
                     style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w500,
@@ -78,7 +98,7 @@ class StoryDetailsPage extends StatelessWidget {
                 ],
               ),
             ),
-            _buildComments(result['kids'], 0),
+            _buildComments(widget.result['kids'], 0),
           ],
         ),
       ),
@@ -134,6 +154,15 @@ class StoryDetailsPage extends StatelessWidget {
     }
   }
 
+  void _onUserTap(String userId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserDetailsPage(userId: userId,),
+      ),
+    );
+  }
+
   Widget _buildComment(Comment comment) {
     return Padding(
       padding: const EdgeInsets.only(left: 10.0),
@@ -154,9 +183,12 @@ class StoryDetailsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      comment.by,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    GestureDetector(
+                      onTap: () => _onUserTap(comment.by),
+                      child: Text(
+                        '${comment.by} - ${DateFormat("MMMM d, yyyy 'at' h:mm a").format(DateTime.fromMillisecondsSinceEpoch(comment.time * 1000))}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),

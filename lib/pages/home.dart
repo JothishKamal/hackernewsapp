@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:hackernews/pages/favorites.dart';
 import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {

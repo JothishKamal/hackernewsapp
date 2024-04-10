@@ -173,9 +173,20 @@ class _HomePageState extends State<HomePage> {
           overflow: TextOverflow.ellipsis,
           maxLines: 2,
         ),
-        subtitle: Text(
-          '''by ${result['by']}''',
-          overflow: TextOverflow.ellipsis,
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'by ${result['by']}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 5),
+            Text(
+              '${result['descendants']} comments',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
         ),
         onTap: () {},
       ),

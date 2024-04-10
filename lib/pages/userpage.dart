@@ -83,6 +83,10 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
             style: const TextStyle(fontSize: 18),
           ),
           Text(
+            'Submissions: ${user.submitted.length}',
+            style: const TextStyle(fontSize: 18),
+          ),
+          Text(
             'Created: ${DateFormat("MMMM d, yyyy 'at' h:mm a").format(DateTime.fromMillisecondsSinceEpoch(user.created * 1000))}',
             style: const TextStyle(fontSize: 18),
           ),

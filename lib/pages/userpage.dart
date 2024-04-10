@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:hackernews/models/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:hackernews/models/story.dart';
 
 class UserDetailsPage extends StatefulWidget {
   final String userId;
-  const UserDetailsPage({Key? key, required this.userId}) : super(key: key);
+  const UserDetailsPage({super.key, required this.userId});
 
   @override
   State<UserDetailsPage> createState() => _UserDetailsPageState();
@@ -76,16 +77,23 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
         children: [
           Text(
             'User: ${user.id}',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
           ),
+          const SizedBox(height: 10),
           Text(
             'Karma: ${user.karma}',
             style: const TextStyle(fontSize: 18),
           ),
+          const SizedBox(height: 10),
           Text(
             'Submissions: ${user.submitted.length}',
             style: const TextStyle(fontSize: 18),
           ),
+          const SizedBox(height: 10),
           Text(
             'Created: ${DateFormat("MMMM d, yyyy 'at' h:mm a").format(DateTime.fromMillisecondsSinceEpoch(user.created * 1000))}',
             style: const TextStyle(fontSize: 18),

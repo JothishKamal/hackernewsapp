@@ -15,6 +15,7 @@ class _HomePageState extends State<HomePage> {
   final Map<int, Map<String, dynamic>> storiesMap = {};
   final List<int> stories = [];
   int numberOfStoriesToShow = 10;
+  Set<int> favoriteStories = <int>{};
 
   @override
   void initState() {
@@ -41,6 +42,16 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _toggleFavorite(int storyId) {
+    setState(() {
+      if (favoriteStories.contains(storyId)) {
+        favoriteStories.remove(storyId);
+      } else {
+        favoriteStories.add(storyId);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     List<int> storiesToShow = stories.take(numberOfStoriesToShow).toList();
@@ -52,13 +63,9 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _searchField(),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             _sortByDB(),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             Expanded(
               child: ListView.separated(
                 itemCount: storiesToShow.length,
@@ -67,7 +74,7 @@ class _HomePageState extends State<HomePage> {
                   child: Divider(),
                 ),
                 itemBuilder: (context, index) {
-                  return _storyCard(index);
+                  return _storyCard(storiesToShow[index]);
                 },
               ),
             ),
@@ -129,8 +136,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _storyCard(int index) {
-    int storyId = stories[index];
+  Widget _storyCard(int storyId) {
     if (!storiesMap.containsKey(storyId)) {
       return FutureBuilder<Map<String, dynamic>>(
         future: fetchStory(storyId),
@@ -142,25 +148,25 @@ class _HomePageState extends State<HomePage> {
           } else {
             final result = snapshot.data!;
             storiesMap[storyId] = result;
-            return _buildStoryCard(result);
+            return _buildStoryCard(result, storyId);
           }
         },
       );
     } else {
-      return _buildStoryCard(storiesMap[storyId]!);
+      return _buildStoryCard(storiesMap[storyId]!, storyId);
     }
   }
 
-  Widget _buildStoryCard(Map<String, dynamic> result) {
+  Widget _buildStoryCard(Map<String, dynamic> result, int storyId) {
+    bool isFavorite = favoriteStories.contains(storyId);
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       child: ListTile(
         leading: Column(
           children: [
             const Icon(Icons.expand_less),
-            const SizedBox(
-              height: 2.5,
-            ),
+            const SizedBox(height: 2.5),
             Text(
               result['score'].toString(),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
@@ -170,8 +176,6 @@ class _HomePageState extends State<HomePage> {
         title: Text(
           "${result['title']}",
           style: const TextStyle(fontWeight: FontWeight.w600),
-          overflow: TextOverflow.ellipsis,
-          maxLines: 2,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,6 +189,23 @@ class _HomePageState extends State<HomePage> {
             Text(
               '${result['descendants']} comments',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
+              onPressed: () {
+                _toggleFavorite(storyId);
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.cloud_download),
+              onPressed: () {
+                // TODO: Cache stories for offline reading
+              },
             ),
           ],
         ),

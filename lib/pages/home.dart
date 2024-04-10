@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hackernews/pages/favorites.dart';
 import 'package:hackernews/pages/offline.dart';
+import 'package:hackernews/pages/storypage.dart';
 import 'package:http/http.dart' as http;
 
 // I dum
@@ -234,6 +235,15 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _onStoryTap(Map<String, dynamic> result) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => StoryDetailsPage(result: result),
+    ),
+  );
+}
+
   Widget _buildStoryCard(Map<String, dynamic> result, int storyId) {
     bool isFavorite = favoriteStories.contains(storyId);
 
@@ -286,7 +296,9 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        onTap: () {},
+        onTap: () {
+          _onStoryTap(result);
+        },
       ),
     );
   }

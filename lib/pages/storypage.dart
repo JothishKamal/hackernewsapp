@@ -4,34 +4,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
 
-class Comment {
-  final String by;
-  final int id;
-  final List<int>? kids;
-  final int time;
-  final String text;
-  final int indentLevel;
-
-  Comment({
-    required this.by,
-    required this.id,
-    required this.kids,
-    required this.time,
-    required this.text,
-    required this.indentLevel,
-  });
-
-  factory Comment.fromJson(Map<String, dynamic> json, int indentLevel) {
-    return Comment(
-      by: json['by'] ?? '',
-      id: json['id'] ?? 0,
-      kids: json['kids'] != null ? List<int>.from(json['kids']) : null,
-      time: json['time'] ?? 0,
-      text: json['text'] ?? '',
-      indentLevel: indentLevel,
-    );
-  }
-}
+import 'package:hackernews/models/comment.dart';
 
 class StoryDetailsPage extends StatelessWidget {
   final Map<String, dynamic> result;

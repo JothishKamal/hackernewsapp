@@ -63,44 +63,52 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final List<NavigationRailDestination> navigationRailItems = [
-      const NavigationRailDestination(
-        icon: Icon(Icons.home),
-        label: SizedBox(),
-      ),
-      const NavigationRailDestination(
-        icon: Icon(Icons.favorite),
-        label: SizedBox(),
-      ),
-      const NavigationRailDestination(
-        icon: Icon(Icons.cloud_download),
-        label: SizedBox(),
-      ),
-    ];
+    return SafeArea(
+      child: Scaffold(
+          appBar: _appBar(),
+          drawer: _buildDrawer(),
+          body: Center(
+            child: _buildContent(),
+          )),
+    );
+  }
 
-    return Scaffold(
-      appBar: _appBar(),
-      body: Row(
+  Drawer _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
         children: [
-          SizedBox(
-            width: 64,
-            child: NavigationRail(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (int index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              labelType: NavigationRailLabelType.selected,
-              destinations: navigationRailItems,
-            ),
+          
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text('Home'),
+            onTap: () {
+              setState(() {
+                _selectedIndex = 0;
+              });
+              Navigator.pop(context); 
+            },
           ),
-          const VerticalDivider(thickness: 1, width: 1),
-          Expanded(
-            child: Center(
-              child: _buildContent(),
-            ),
-          )
+          ListTile(
+            leading: const Icon(Icons.favorite),
+            title: const Text('Favorites'),
+            onTap: () {
+              setState(() {
+                _selectedIndex = 1;
+              });
+              Navigator.pop(context); 
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.cloud_download),
+            title: const Text('Offline Reading'),
+            onTap: () {
+              setState(() {
+                _selectedIndex = 2;
+              });
+              Navigator.pop(context); 
+            },
+          ),
         ],
       ),
     );

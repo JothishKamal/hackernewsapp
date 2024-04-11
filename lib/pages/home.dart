@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hackernews/pages/favorites.dart';
 import 'package:hackernews/pages/offline.dart';
 import 'package:hackernews/pages/storypage.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 // I dum
 
@@ -22,9 +24,11 @@ class _HomePageState extends State<HomePage> {
   final List<String> sortByList = ['Top', 'New', 'Best'];
   final List<int> stories = [];
   final Map<int, Map<String, dynamic>> storiesMap = {};
+  Map<int, Map<String, dynamic>> offlineStoriesMap = {};
   int numberOfStoriesToShow = 10;
   int _selectedIndex = 0;
   Set<int> favoriteStories = <int>{};
+  Set<int> offlineStories = <int>{};
   bool isOffline = true;
 
   @override
@@ -32,22 +36,44 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     sortBy = 'New';
     _checkConnectivity();
-    if(!isOffline) _fetchStories(sortBy);
+    _loadOfflineStories();
+
+    if (!isOffline) _fetchStories(sortBy);
 
     _scrollController.addListener(() {
-    if (_scrollController.position.pixels ==
-        _scrollController.position.maxScrollExtent) {
-      _loadMoreStories();
-    }
-  });
+      if (_scrollController.position.pixels ==
+          _scrollController.position.maxScrollExtent) {
+        _loadMoreStories();
+      }
+    });
   }
 
+  void _updateOfflineStoriesMap(int storyId, Map<String, dynamic> storyData) {
+    setState(() {
+      offlineStoriesMap[storyId] = storyData;
+    });
+  }
+
+  void _loadOfflineStories() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    Set<int> offlineStoriesSet = prefs
+        .getKeys()
+        .where((key) => key.startsWith('offlineStory_'))
+        .map((key) => int.parse(key.split('_').last))
+        .toSet();
+    setState(() {
+      offlineStories = offlineStoriesSet;
+      offlineStoriesMap = Map.fromEntries(offlineStoriesSet.map((id) =>
+          MapEntry(id, jsonDecode(prefs.getString('offlineStory_$id')!))));
+    });
+  }
 
   void _checkConnectivity() {
     Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
       setState(() {
         if (result == ConnectivityResult.none) {
           isOffline = true;
+          _selectedIndex = 2;
         } else {
           isOffline = false;
           _fetchStories(sortBy);
@@ -57,15 +83,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _fetchStories(String sortBy) async {
-    final response = await http.get(Uri.parse(
-        'https://hacker-news.firebaseio.com/v0/${sortBy.toLowerCase()}stories.json'));
-    if (response.statusCode == 200) {
-      final List<int> data = List<int>.from(jsonDecode(response.body));
-      setState(() {
-        stories.addAll(data);
-      });
-    } else {
-      _showError('Failed to fetch stories');
+    try {
+      final response = await http.get(Uri.parse(
+          'https://hacker-news.firebaseio.com/v0/${sortBy.toLowerCase()}stories.json'));
+      if (response.statusCode == 200) {
+        final List<int> data = List<int>.from(jsonDecode(response.body));
+        setState(() {
+          stories.addAll(data);
+        });
+      } else {
+        _showError('Failed to fetch stories');
+      }
+    } on SocketException catch (_) {
+      _showError(
+          'Network is unreachable. Please check your internet connection.');
+    } catch (e) {
+      _showError('An error occurred while fetching stories: $e');
     }
   }
 
@@ -90,17 +123,31 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _toggleOffline(int storyId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      if (offlineStories.contains(storyId)) {
+        offlineStories.remove(storyId);
+        prefs.remove('offlineStory_$storyId');
+        _updateOfflineStoriesMap(storyId, {});
+      } else {
+        offlineStories.add(storyId);
+        prefs.setString(
+            'offlineStory_$storyId', jsonEncode(storiesMap[storyId]));
+        _updateOfflineStoriesMap(storyId, storiesMap[storyId]!);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
         appBar: _appBar(),
         drawer: _buildDrawer(),
-        body: isOffline
-            ? const Center(child: Text("You're currently offline"))
-            : Center(
-                child: _buildContent(),
-              ),
+        body: Center(
+          child: _buildContent(),
+        ),
       ),
     );
   }
@@ -163,6 +210,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildContent() {
+    if (isOffline && _selectedIndex!=2) {
+      return const Center(
+          child: Text(
+        "You're currently offline",
+        style: TextStyle(
+            fontSize: 24, fontWeight: FontWeight.w500, color: Colors.black),
+      ));
+    }
+
     List<int> storiesToShow = stories.take(numberOfStoriesToShow).toList();
 
     switch (_selectedIndex) {
@@ -172,12 +228,13 @@ class _HomePageState extends State<HomePage> {
         return FavoritesPage(
           favoriteStories: favoriteStories,
           storiesMap: storiesMap,
-        ); 
+        );
       case 2:
         return OfflinePage(
-          offlineStories: favoriteStories,
-          storiesMap: storiesMap,
-        ); // TODO: Create OfflineReadingPage widget
+          offlineStories: offlineStories,
+          storiesMap: offlineStoriesMap,
+          updateOfflineStoriesMap: _updateOfflineStoriesMap,
+        );
       default:
         return const Text('Error');
     }
@@ -187,21 +244,27 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _searchField(),
-        const SizedBox(height: 20),
-        _sortByDB(),
-        const SizedBox(height: 20),
         Expanded(
-          child: ListView.separated(
+          child: ListView(
             controller: _scrollController,
-            itemCount: storiesToShow.length,
-            separatorBuilder: (context, index) => const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.0),
-              child: Divider(),
-            ),
-            itemBuilder: (context, index) {
-              return _storyCard(storiesToShow[index]);
-            },
+            children: [
+              _searchField(),
+              const SizedBox(height: 20),
+              _sortByDB(),
+              const SizedBox(height: 20),
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: storiesToShow.length,
+                separatorBuilder: (context, index) => const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Divider(),
+                ),
+                itemBuilder: (context, index) {
+                  return _storyCard(storiesToShow[index]);
+                },
+              ),
+            ],
           ),
         ),
       ],
@@ -278,13 +341,17 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => StoryDetailsPage(result: result),
+        builder: (context) => StoryDetailsPage(
+          result: result,
+          showComments: true,
+        ),
       ),
     );
   }
 
   Widget _buildStoryCard(Map<String, dynamic> result, int storyId) {
     bool isFavorite = favoriteStories.contains(storyId);
+    bool isOffline = offlineStories.contains(storyId);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -327,9 +394,10 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.cloud_download),
+                  icon:
+                      Icon(isOffline ? Icons.cloud_done : Icons.cloud_download),
                   onPressed: () {
-                    // TODO: Cache stories for offline reading
+                    _toggleOffline(storyId);
                   },
                 ),
               ],

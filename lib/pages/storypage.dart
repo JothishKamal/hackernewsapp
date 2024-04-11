@@ -10,13 +10,30 @@ import 'package:hackernews/models/comment.dart';
 
 class StoryDetailsPage extends StatefulWidget {
   final Map<String, dynamic> result;
-  const StoryDetailsPage({super.key, required this.result});
+  final bool showComments;
+  const StoryDetailsPage(
+      {super.key, required this.result, required this.showComments});
 
   @override
   State<StoryDetailsPage> createState() => _StoryDetailsPageState();
 }
 
 class _StoryDetailsPageState extends State<StoryDetailsPage> {
+  void _launchURL(String url) async {
+    await FlutterWebBrowser.openWebPage(url: url);
+  }
+
+  void _onUserTap(String userId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserDetailsPage(
+          userId: userId,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -77,36 +94,43 @@ class _StoryDetailsPageState extends State<StoryDetailsPage> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(
-                children: [
-                  const Text(
-                    'Comments ',
-                    style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black),
-                  ),
-                  Text(
-                    '${widget.result['descendants']}',
-                    style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey),
-                  )
-                ],
-              ),
-            ),
-            _buildComments(widget.result['kids'], 0),
+            _commentsSection(),
           ],
         ),
       ),
     );
   }
 
-  void _launchURL(String url) async {
-    await FlutterWebBrowser.openWebPage(url: url);
+  Column _commentsSection() {
+    return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Comments ',
+                      style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black),
+                    ),
+                    Text(
+                      '${widget.result['descendants']}',
+                      style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey),
+                    )
+                  ],
+                ),
+              ),
+              if (widget.showComments &&
+                  widget.result['kids'] != null &&
+                  (widget.result['kids'] as List).isNotEmpty)
+                _buildComments(widget.result['kids'], 0),
+            ],
+          );
   }
 
   Widget _buildComments(List<dynamic>? kids, int indentLevel) {
@@ -152,15 +176,6 @@ class _StoryDetailsPageState extends State<StoryDetailsPage> {
     } else {
       throw Exception('Failed to load comment');
     }
-  }
-
-  void _onUserTap(String userId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => UserDetailsPage(userId: userId,),
-      ),
-    );
   }
 
   Widget _buildComment(Comment comment) {

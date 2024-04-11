@@ -38,7 +38,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => StoryDetailsPage(result: story),
+                        builder: (context) => StoryDetailsPage(result: story, showComments: true,),
                       ),
                     );
                   },

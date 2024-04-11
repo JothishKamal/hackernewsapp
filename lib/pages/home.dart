@@ -68,12 +68,21 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _checkConnectivity() {
+  void _checkConnectivity() async {
+    ConnectivityResult result = await Connectivity().checkConnectivity();
+    setState(() {
+      if (result == ConnectivityResult.none) {
+        isOffline = true;
+      } else {
+        isOffline = false;
+        _fetchStories(sortBy);
+      }
+    });
+
     Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
       setState(() {
         if (result == ConnectivityResult.none) {
           isOffline = true;
-          _selectedIndex = 2;
         } else {
           isOffline = false;
           _fetchStories(sortBy);
@@ -210,13 +219,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildContent() {
-    if (isOffline && _selectedIndex!=2) {
-      return const Center(
-          child: Text(
-        "You're currently offline",
-        style: TextStyle(
-            fontSize: 24, fontWeight: FontWeight.w500, color: Colors.black),
-      ));
+    if (isOffline) {
+      if (_selectedIndex == 2) {
+        return OfflinePage(
+            offlineStories: offlineStories,
+            storiesMap: offlineStoriesMap,
+            updateOfflineStoriesMap: _updateOfflineStoriesMap);
+      } else {
+        return const Center(
+            child: Text(
+          "You're currently offline",
+          style: TextStyle(
+              fontSize: 24, fontWeight: FontWeight.w500, color: Colors.black),
+        ));
+      }
     }
 
     List<int> storiesToShow = stories.take(numberOfStoriesToShow).toList();
@@ -343,7 +359,7 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(
         builder: (context) => StoryDetailsPage(
           result: result,
-          showComments: true,
+          isOffline: false,
         ),
       ),
     );

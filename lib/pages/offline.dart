@@ -46,7 +46,7 @@ class _OfflinePageState extends State<OfflinePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => StoryDetailsPage(result: story, showComments: false),
+                        builder: (context) => StoryDetailsPage(result: story, isOffline: true),
                       ),
                     );
                   },

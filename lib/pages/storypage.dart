@@ -10,9 +10,9 @@ import 'package:hackernews/models/comment.dart';
 
 class StoryDetailsPage extends StatefulWidget {
   final Map<String, dynamic> result;
-  final bool showComments;
+  final bool isOffline;
   const StoryDetailsPage(
-      {super.key, required this.result, required this.showComments});
+      {super.key, required this.result, required this.isOffline});
 
   @override
   State<StoryDetailsPage> createState() => _StoryDetailsPageState();
@@ -52,7 +52,7 @@ class _StoryDetailsPageState extends State<StoryDetailsPage> {
               ),
             ),
             GestureDetector(
-              onTap: () => _onUserTap(widget.result['by']),
+              onTap: () => widget.isOffline ? {} : _onUserTap(widget.result['by']),
               child: Padding(
                 padding: const EdgeInsets.only(left: 10.0),
                 child: Text(
@@ -125,7 +125,7 @@ class _StoryDetailsPageState extends State<StoryDetailsPage> {
                   ],
                 ),
               ),
-              if (widget.showComments &&
+              if (!widget.isOffline &&
                   widget.result['kids'] != null &&
                   (widget.result['kids'] as List).isNotEmpty)
                 _buildComments(widget.result['kids'], 0),

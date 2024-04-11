@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hackernews/pages/storypage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FavoritesPage extends StatefulWidget {
   final Set<int> favoriteStories;
@@ -38,7 +39,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => StoryDetailsPage(result: story, isOffline: false,),
+                        builder: (context) => StoryDetailsPage(
+                          result: story,
+                          isOffline: false,
+                        ),
                       ),
                     );
                   },
@@ -98,13 +102,16 @@ class _FavoritesPageState extends State<FavoritesPage> {
     );
   }
 
-  void _toggleFavorite(int storyId) {
+  void _toggleFavorite(int storyId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       if (widget.favoriteStories.contains(storyId)) {
         widget.favoriteStories.remove(storyId);
       } else {
         widget.favoriteStories.add(storyId);
       }
+      prefs.setStringList('favoriteStories',
+          widget.favoriteStories.map((id) => id.toString()).toList());
     });
   }
 }

@@ -120,6 +120,21 @@ class _StoryDetailsPageState extends State<StoryDetailsPage> {
     );
   }
 
+  AppBar _appBar() {
+    return AppBar(
+      centerTitle: true,
+      backgroundColor: const Color.fromRGBO(255, 100, 4, 1),
+      title: const Text(
+        'Story Details',
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
   Column _commentsSection() {
     return Column(
       children: [
@@ -176,13 +191,12 @@ class _StoryDetailsPageState extends State<StoryDetailsPage> {
     );
   }
 
-  Future<List<Comment>> _getCommentsByIds(
-      List<dynamic> ids, int indentLevel) async {
+  Future<List<Comment>> _getCommentsByIds(List<dynamic> ids, int indentLevel) {
     List<Future<Comment>> futures = [];
     for (var id in ids) {
       futures.add(_getCommentById(id, indentLevel));
     }
-    return await Future.wait(futures);
+    return Future.wait(futures);
   }
 
   Future<Comment> _getCommentById(int id, int indentLevel) async {
@@ -235,21 +249,6 @@ class _StoryDetailsPageState extends State<StoryDetailsPage> {
           ),
           _buildComments(comment.kids, comment.indentLevel + 1),
         ],
-      ),
-    );
-  }
-
-  AppBar _appBar() {
-    return AppBar(
-      centerTitle: true,
-      backgroundColor: const Color.fromRGBO(255, 100, 4, 1),
-      title: const Text(
-        'Story Details',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-        ),
       ),
     );
   }

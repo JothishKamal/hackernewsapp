@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
   final List<int> stories = [];
   final Map<int, Map<String, dynamic>> storiesMap = {};
   Map<int, Map<String, dynamic>> offlineStoriesMap = {};
-  int numberOfStoriesToShow = 10;
+  int numberOfStoriesToShow = 20;
   int _selectedIndex = 0;
   Set<int> favoriteStories = <int>{};
   Set<int> offlineStories = <int>{};
@@ -443,7 +443,7 @@ class _HomePageState extends State<HomePage> {
                 sortBy = value!;
               });
               stories.clear();
-              numberOfStoriesToShow = 10;
+              numberOfStoriesToShow = 20;
               _fetchStories(value!);
             },
           ),

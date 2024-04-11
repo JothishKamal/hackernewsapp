@@ -30,6 +30,9 @@ class _HomePageState extends State<HomePage> {
   Set<int> favoriteStories = <int>{};
   Set<int> offlineStories = <int>{};
   bool isOffline = true;
+  List<int> storiesToShow = [];
+
+  late TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
@@ -37,6 +40,7 @@ class _HomePageState extends State<HomePage> {
     sortBy = 'New';
     _checkConnectivity();
     _loadOfflineStories();
+    searchController = TextEditingController();
 
     if (!isOffline) _fetchStories(sortBy);
 
@@ -46,6 +50,12 @@ class _HomePageState extends State<HomePage> {
         _loadMoreStories();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 
   void _updateOfflineStoriesMap(int storyId, Map<String, dynamic> storyData) {
@@ -256,24 +266,47 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    List<int> storiesToShow = stories.take(numberOfStoriesToShow).toList();
-
     switch (_selectedIndex) {
       case 0:
-        return homePage(storiesToShow);
+        storiesToShow = stories.take(numberOfStoriesToShow).toList();
+        break;
       case 1:
-        return FavoritesPage(
-          favoriteStories: favoriteStories,
-          storiesMap: storiesMap,
-        );
+        storiesToShow = stories
+            .where((storyId) => favoriteStories.contains(storyId))
+            .toList();
+        break;
       case 2:
-        return OfflinePage(
-          offlineStories: offlineStories,
-          storiesMap: offlineStoriesMap,
-          updateOfflineStoriesMap: _updateOfflineStoriesMap,
-        );
+        storiesToShow = offlineStories.toList();
+        break;
       default:
-        return const Text('Error');
+        storiesToShow = [];
+    }
+
+    if (searchController.text.isNotEmpty) {
+      storiesToShow = storiesToShow.where((storyId) {
+        Map<String, dynamic>? story = storiesMap[storyId];
+        return story != null &&
+            story['title']
+                .toLowerCase()
+                .contains(searchController.text.toLowerCase());
+      }).toList();
+    }
+
+    if (_selectedIndex == 0) {
+      return homePage(storiesToShow);
+    } else if (_selectedIndex == 1) {
+      return FavoritesPage(
+        favoriteStories: favoriteStories,
+        storiesMap: storiesMap,
+      );
+    } else if (_selectedIndex == 2) {
+      return OfflinePage(
+        offlineStories: offlineStories,
+        storiesMap: offlineStoriesMap,
+        updateOfflineStoriesMap: _updateOfflineStoriesMap,
+      );
+    } else {
+      return const Text('Error');
     }
   }
 
@@ -302,51 +335,6 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Row _sortByDB() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 10.0),
-          child: Text(
-            'Sort By: ',
-            style: TextStyle(
-              color: Color.fromRGBO(255, 100, 4, 1),
-              fontWeight: FontWeight.w500,
-              fontSize: 16,
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.only(right: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey),
-          ),
-          child: DropdownButton<String>(
-            underline: Container(),
-            value: sortBy,
-            items: sortByList.map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: (String? value) {
-              setState(() {
-                sortBy = value!;
-              });
-              stories.clear();
-              numberOfStoriesToShow = 10;
-              _fetchStories(value!);
-            },
           ),
         ),
       ],
@@ -460,6 +448,51 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Row _sortByDB() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 10.0),
+          child: Text(
+            'Sort By: ',
+            style: TextStyle(
+              color: Color.fromRGBO(255, 100, 4, 1),
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
+            ),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.only(right: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey),
+          ),
+          child: DropdownButton<String>(
+            underline: Container(),
+            value: sortBy,
+            items: sortByList.map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? value) {
+              setState(() {
+                sortBy = value!;
+              });
+              stories.clear();
+              numberOfStoriesToShow = 10;
+              _fetchStories(value!);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Container _searchField() {
     return Container(
       margin: const EdgeInsets.only(top: 20, left: 10, right: 10),
@@ -473,6 +506,10 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       child: TextField(
+        controller: searchController,
+        onChanged: (value) {
+          setState(() {});
+        },
         decoration: InputDecoration(
           filled: true,
           prefixIcon: const Padding(

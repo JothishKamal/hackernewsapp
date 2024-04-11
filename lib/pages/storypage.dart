@@ -7,6 +7,7 @@ import 'package:flutter_web_browser/flutter_web_browser.dart';
 import 'package:intl/intl.dart';
 
 import 'package:hackernews/models/comment.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class StoryDetailsPage extends StatefulWidget {
   final Map<String, dynamic> result;
@@ -19,8 +20,25 @@ class StoryDetailsPage extends StatefulWidget {
 }
 
 class _StoryDetailsPageState extends State<StoryDetailsPage> {
-  void _launchURL(String url) async {
-    await FlutterWebBrowser.openWebPage(url: url);
+  void _launchURL(String url) {
+    if (widget.isOffline) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SafeArea(
+            child: Scaffold(
+                appBar: AppBar(title: const Text('Offline View')),
+                body: WebView(
+                  initialUrl:
+                      'data:text/html;base64,${base64Encode(const Utf8Encoder().convert(widget.result['content']))}',
+                  javascriptMode: JavascriptMode.unrestricted,
+                )),
+          ),
+        ),
+      );
+    } else {
+      FlutterWebBrowser.openWebPage(url: url);
+    }
   }
 
   void _onUserTap(String userId) {
@@ -52,7 +70,8 @@ class _StoryDetailsPageState extends State<StoryDetailsPage> {
               ),
             ),
             GestureDetector(
-              onTap: () => widget.isOffline ? {} : _onUserTap(widget.result['by']),
+              onTap: () =>
+                  widget.isOffline ? {} : _onUserTap(widget.result['by']),
               child: Padding(
                 padding: const EdgeInsets.only(left: 10.0),
                 child: Text(
@@ -103,34 +122,34 @@ class _StoryDetailsPageState extends State<StoryDetailsPage> {
 
   Column _commentsSection() {
     return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Row(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Row(
-                  children: [
-                    const Text(
-                      'Comments ',
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black),
-                    ),
-                    Text(
-                      '${widget.result['descendants']}',
-                      style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey),
-                    )
-                  ],
-                ),
+              const Text(
+                'Comments ',
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black),
               ),
-              if (!widget.isOffline &&
-                  widget.result['kids'] != null &&
-                  (widget.result['kids'] as List).isNotEmpty)
-                _buildComments(widget.result['kids'], 0),
+              Text(
+                '${widget.result['descendants']}',
+                style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey),
+              )
             ],
-          );
+          ),
+        ),
+        if (!widget.isOffline &&
+            widget.result['kids'] != null &&
+            (widget.result['kids'] as List).isNotEmpty)
+          _buildComments(widget.result['kids'], 0),
+      ],
+    );
   }
 
   Widget _buildComments(List<dynamic>? kids, int indentLevel) {

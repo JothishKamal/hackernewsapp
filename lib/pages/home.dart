@@ -134,18 +134,43 @@ class _HomePageState extends State<HomePage> {
 
   void _toggleOffline(int storyId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      if (offlineStories.contains(storyId)) {
-        offlineStories.remove(storyId);
-        prefs.remove('offlineStory_$storyId');
-        _updateOfflineStoriesMap(storyId, {});
-      } else {
+    Map<String, dynamic> storyDetails = storiesMap[storyId]!;
+    String? storyContent;
+
+    if (offlineStories.contains(storyId)) {
+      offlineStories.remove(storyId);
+      prefs.remove('offlineStory_$storyId');
+      _updateOfflineStoriesMap(storyId, {});
+    } else {
+      try {
         offlineStories.add(storyId);
-        prefs.setString(
-            'offlineStory_$storyId', jsonEncode(storiesMap[storyId]));
-        _updateOfflineStoriesMap(storyId, storiesMap[storyId]!);
+        storyContent = await _cacheWebpage(storyDetails['url']);
+        storyDetails['content'] = storyContent;
+        prefs.setString('offlineStory_$storyId', jsonEncode(storyDetails));
+        _updateOfflineStoriesMap(storyId, storyDetails);
+      } catch (e) {
+        // Handle the error (e.g., show a SnackBar, log the error)
+        _showError('Error caching webpage: $e');
+        // Remove the story from offlineStories if caching fails
+        offlineStories.remove(storyId);
+        // Optionally, you could rethrow the error to propagate it up
+        // throw e;
       }
-    });
+    }
+  }
+
+  Future<String> _cacheWebpage(String url) async {
+    try {
+      http.Response response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else {
+        return '';
+      }
+    } catch (e) {
+      return '';
+    }
   }
 
   @override

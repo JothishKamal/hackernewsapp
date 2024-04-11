@@ -7,8 +7,6 @@ import 'package:hackernews/pages/storypage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-// I dum
-
 import 'package:connectivity/connectivity.dart';
 
 class HomePage extends StatefulWidget {
@@ -20,6 +18,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late String sortBy;
+  late TextEditingController searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<String> sortByList = ['Top', 'New', 'Best'];
   final List<int> stories = [];
@@ -29,16 +28,15 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   Set<int> favoriteStories = <int>{};
   Set<int> offlineStories = <int>{};
-  bool isOffline = true;
   List<int> storiesToShow = [];
-
-  late TextEditingController searchController = TextEditingController();
+  bool isOffline = true;
 
   @override
   void initState() {
     super.initState();
     sortBy = 'New';
     _checkConnectivity();
+    _loadFavoriteStories();
     _loadOfflineStories();
     searchController = TextEditingController();
 
@@ -52,16 +50,15 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
-  }
-
-  void _updateOfflineStoriesMap(int storyId, Map<String, dynamic> storyData) {
-    setState(() {
-      offlineStoriesMap[storyId] = storyData;
-    });
+  void _loadFavoriteStories() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? favoriteStoriesList = prefs.getStringList('favoriteStories');
+    if (favoriteStoriesList != null) {
+      setState(() {
+        favoriteStories =
+            favoriteStoriesList.map((id) => int.parse(id)).toSet();
+      });
+    }
   }
 
   void _loadOfflineStories() async {
@@ -75,6 +72,12 @@ class _HomePageState extends State<HomePage> {
       offlineStories = offlineStoriesSet;
       offlineStoriesMap = Map.fromEntries(offlineStoriesSet.map((id) =>
           MapEntry(id, jsonDecode(prefs.getString('offlineStory_$id')!))));
+    });
+  }
+
+  void _updateOfflineStoriesMap(int storyId, Map<String, dynamic> storyData) {
+    setState(() {
+      offlineStoriesMap[storyId] = storyData;
     });
   }
 
@@ -132,13 +135,16 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _toggleFavorite(int storyId) {
+  void _toggleFavorite(int storyId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       if (favoriteStories.contains(storyId)) {
         favoriteStories.remove(storyId);
       } else {
         favoriteStories.add(storyId);
       }
+      prefs.setStringList('favoriteStories',
+          favoriteStories.map((id) => id.toString()).toList());
     });
   }
 
@@ -180,6 +186,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
@@ -192,60 +204,79 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  AppBar _appBar() {
+    return AppBar(
+      centerTitle: true,
+      backgroundColor: const Color.fromRGBO(255, 100, 4, 1),
+      title: const Text(
+        'Hacker News',
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
   Drawer _buildDrawer() {
     return Drawer(
-      child: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.home),
-                  title: const Text('Home'),
-                  onTap: () {
-                    setState(() {
-                      _selectedIndex = 0;
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.favorite),
-                  title: const Text('Favorites'),
-                  onTap: () {
-                    setState(() {
-                      _selectedIndex = 1;
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.cloud_download),
-                  title: const Text('Offline Reading'),
-                  onTap: () {
-                    setState(() {
-                      _selectedIndex = 2;
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              'Designed with ❤️ by Jo',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.blueGrey,
+      child: drawerList(),
+    );
+  }
+
+  Column drawerList() {
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.home),
+                title: const Text('Home'),
+                onTap: () {
+                  setState(() {
+                    _selectedIndex = 0;
+                  });
+                  Navigator.pop(context);
+                },
               ),
+              ListTile(
+                leading: const Icon(Icons.favorite),
+                title: const Text('Favorites'),
+                onTap: () {
+                  setState(() {
+                    _selectedIndex = 1;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.cloud_download),
+                title: const Text('Offline Reading'),
+                onTap: () {
+                  setState(() {
+                    _selectedIndex = 2;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Designed with ❤️ by Jo',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.blueGrey,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -341,6 +372,86 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Container _searchField() {
+    return Container(
+      margin: const EdgeInsets.only(top: 20, left: 10, right: 10),
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1D1617).withOpacity(0.11),
+            blurRadius: 20,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: searchController,
+        onChanged: (value) {
+          setState(() {});
+        },
+        decoration: InputDecoration(
+          filled: true,
+          prefixIcon: const Padding(
+            padding: EdgeInsets.all(0),
+            child: Icon(Icons.search),
+          ),
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.all(15),
+          hintText: 'Search',
+          hintStyle: const TextStyle(color: Color(0xffDDDADA), fontSize: 14),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Row _sortByDB() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 10.0),
+          child: Text(
+            'Sort By: ',
+            style: TextStyle(
+              color: Color.fromRGBO(255, 100, 4, 1),
+              fontWeight: FontWeight.w500,
+              fontSize: 16,
+            ),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.only(right: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey),
+          ),
+          child: DropdownButton<String>(
+            underline: Container(),
+            value: sortBy,
+            items: sortByList.map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? value) {
+              setState(() {
+                sortBy = value!;
+              });
+              stories.clear();
+              numberOfStoriesToShow = 10;
+              _fetchStories(value!);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _storyCard(int storyId) {
     if (!storiesMap.containsKey(storyId)) {
       return FutureBuilder<Map<String, dynamic>>(
@@ -362,16 +473,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _onStoryTap(Map<String, dynamic> result) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => StoryDetailsPage(
-          result: result,
-          isOffline: false,
-        ),
-      ),
+  Future<Map<String, dynamic>> fetchStory(int id) async {
+    final response = await http.get(
+      Uri.parse('https://hacker-news.firebaseio.com/v0/item/$id.json'),
     );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch story');
+    }
   }
 
   Widget _buildStoryCard(Map<String, dynamic> result, int storyId) {
@@ -436,108 +547,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<Map<String, dynamic>> fetchStory(int id) async {
-    final response = await http.get(
-      Uri.parse('https://hacker-news.firebaseio.com/v0/item/$id.json'),
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to fetch story');
-    }
-  }
-
-  Row _sortByDB() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 10.0),
-          child: Text(
-            'Sort By: ',
-            style: TextStyle(
-              color: Color.fromRGBO(255, 100, 4, 1),
-              fontWeight: FontWeight.w500,
-              fontSize: 16,
-            ),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.only(right: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey),
-          ),
-          child: DropdownButton<String>(
-            underline: Container(),
-            value: sortBy,
-            items: sortByList.map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: (String? value) {
-              setState(() {
-                sortBy = value!;
-              });
-              stories.clear();
-              numberOfStoriesToShow = 10;
-              _fetchStories(value!);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Container _searchField() {
-    return Container(
-      margin: const EdgeInsets.only(top: 20, left: 10, right: 10),
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1D1617).withOpacity(0.11),
-            blurRadius: 20,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: searchController,
-        onChanged: (value) {
-          setState(() {});
-        },
-        decoration: InputDecoration(
-          filled: true,
-          prefixIcon: const Padding(
-            padding: EdgeInsets.all(0),
-            child: Icon(Icons.search),
-          ),
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.all(15),
-          hintText: 'Search',
-          hintStyle: const TextStyle(color: Color(0xffDDDADA), fontSize: 14),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
-      ),
-    );
-  }
-
-  AppBar _appBar() {
-    return AppBar(
-      centerTitle: true,
-      backgroundColor: const Color.fromRGBO(255, 100, 4, 1),
-      title: const Text(
-        'Hacker News',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
+  void _onStoryTap(Map<String, dynamic> result) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StoryDetailsPage(
+          result: result,
+          isOffline: false,
         ),
       ),
     );

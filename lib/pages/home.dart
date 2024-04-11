@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 
 // I dum
 
+import 'package:connectivity/connectivity.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -16,18 +18,42 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late String sortBy;
+  final ScrollController _scrollController = ScrollController();
   final List<String> sortByList = ['Top', 'New', 'Best'];
-  final Map<int, Map<String, dynamic>> storiesMap = {};
   final List<int> stories = [];
+  final Map<int, Map<String, dynamic>> storiesMap = {};
   int numberOfStoriesToShow = 10;
-  Set<int> favoriteStories = <int>{};
   int _selectedIndex = 0;
+  Set<int> favoriteStories = <int>{};
+  bool isOffline = true;
 
   @override
   void initState() {
     super.initState();
     sortBy = 'New';
-    _fetchStories(sortBy);
+    _checkConnectivity();
+    if(!isOffline) _fetchStories(sortBy);
+
+    _scrollController.addListener(() {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
+      _loadMoreStories();
+    }
+  });
+  }
+
+
+  void _checkConnectivity() {
+    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+      setState(() {
+        if (result == ConnectivityResult.none) {
+          isOffline = true;
+        } else {
+          isOffline = false;
+          _fetchStories(sortBy);
+        }
+      });
+    });
   }
 
   void _fetchStories(String sortBy) async {
@@ -68,11 +94,14 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-          appBar: _appBar(),
-          drawer: _buildDrawer(),
-          body: Center(
-            child: _buildContent(),
-          )),
+        appBar: _appBar(),
+        drawer: _buildDrawer(),
+        body: isOffline
+            ? const Center(child: Text("You're currently offline"))
+            : Center(
+                child: _buildContent(),
+              ),
+      ),
     );
   }
 
@@ -143,7 +172,7 @@ class _HomePageState extends State<HomePage> {
         return FavoritesPage(
           favoriteStories: favoriteStories,
           storiesMap: storiesMap,
-        ); // TODO: Create FavoritesPage widget
+        ); 
       case 2:
         return OfflinePage(
           offlineStories: favoriteStories,
@@ -164,6 +193,7 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: 20),
         Expanded(
           child: ListView.separated(
+            controller: _scrollController,
             itemCount: storiesToShow.length,
             separatorBuilder: (context, index) => const Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.0),
@@ -174,13 +204,6 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ),
-        if (numberOfStoriesToShow < stories.length)
-          Center(
-            child: ElevatedButton(
-              onPressed: _loadMoreStories,
-              child: const Text('Load More'),
-            ),
-          ),
       ],
     );
   }

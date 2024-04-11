@@ -27,7 +27,7 @@ class _OfflinePageState extends State<OfflinePage> {
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
-          'Favorites',
+          'Offline Reading',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
       ),

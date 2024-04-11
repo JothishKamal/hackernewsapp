@@ -2,15 +2,18 @@
 
 A HackerNews Application built using Flutter.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Story Listing(Top, New, Best) with title, author, points, and number of comments.
 
-A few resources to get you started if this is your first Flutter project:
+- Story Details with threaded comments.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- User Profiles with submissions, comments, creation date and karma points. (TODO: Changes)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Additional Features
+
+- Searching (TODO)
+
+- Favorites
+
+- Offline Reading

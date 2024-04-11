@@ -37,8 +37,7 @@ class _OfflinePageState extends State<OfflinePage> {
                 int storyId = offlineStoryIds[index];
                 Map<String, dynamic>? story = widget.storiesMap[storyId];
                 if (story == null) {
-                  // Handle the case where the story is null, perhaps by showing a placeholder
-                  return Container(); // or some other widget
+                  return Container();
                 }
 
                 bool isOffline = widget.offlineStories.contains(storyId);
@@ -57,7 +56,7 @@ class _OfflinePageState extends State<OfflinePage> {
                     child: ListTile(
                       leading: Column(
                         children: [
-                          const Icon(Icons.offline_bolt), // Use offline icon
+                          const Icon(Icons.offline_bolt),
                           const SizedBox(height: 2.5),
                           Text(
                             story['score'].toString(),
@@ -91,7 +90,7 @@ class _OfflinePageState extends State<OfflinePage> {
                                 icon: Icon(isOffline
                                     ? Icons.cloud_done
                                     : Icons
-                                        .cloud_download), // Use cloud download icon
+                                        .cloud_download),
                                 onPressed: () {
                                   _toggleOffline(storyId);
                                 },

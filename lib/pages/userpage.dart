@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:hackernews/models/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:hackernews/models/story.dart';
 
 class UserDetailsPage extends StatefulWidget {
   final String userId;
@@ -54,6 +53,69 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
     );
   }
 
+  Widget _buildBody(User user) {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: SizedBox(
+        height: 320,
+        child: Card(
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.person),
+                  title: Text(
+                    user.id,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ListTile(
+                  leading: const Icon(Icons.star),
+                  title: Text(
+                    'Karma: ${user.karma}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
+                ListTile(
+                  leading: const Icon(Icons.article),
+                  title: Text(
+                    'Submissions: ${user.submitted.length}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
+                ListTile(
+                  leading: const Icon(Icons.calendar_today),
+                  title: Text(
+                    'Created at ${DateFormat("MMMM d, yyyy 'at' h:mm a").format(DateTime.fromMillisecondsSinceEpoch(user.created * 1000))}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   AppBar _appBar() {
     return AppBar(
       centerTitle: true,
@@ -65,40 +127,6 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
           fontSize: 28,
           fontWeight: FontWeight.w700,
         ),
-      ),
-    );
-  }
-
-  Widget _buildBody(User user) {
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'User: ${user.id}',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Karma: ${user.karma}',
-            style: const TextStyle(fontSize: 18),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Submissions: ${user.submitted.length}',
-            style: const TextStyle(fontSize: 18),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Created: ${DateFormat("MMMM d, yyyy 'at' h:mm a").format(DateTime.fromMillisecondsSinceEpoch(user.created * 1000))}',
-            style: const TextStyle(fontSize: 18),
-          ),
-        ],
       ),
     );
   }

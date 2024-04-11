@@ -21,6 +21,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Widget build(BuildContext context) {
     List<int> favoriteStoryIds = widget.favoriteStories.toList();
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          'Favorites',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
       body: favoriteStoryIds.isEmpty
           ? const Center(
               child: Text(

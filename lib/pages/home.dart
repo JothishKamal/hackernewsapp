@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   final List<int> stories = [];
   final Map<int, Map<String, dynamic>> storiesMap = {};
   Map<int, Map<String, dynamic>> offlineStoriesMap = {};
+  Map<int, Map<String, dynamic>> favoriteStoriesMap = {};
   int numberOfStoriesToShow = 20;
   int _selectedIndex = 0;
   Set<int> favoriteStories = <int>{};
@@ -36,7 +37,6 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     sortBy = 'New';
     _checkConnectivity();
-    _loadFavoriteStories();
     _loadOfflineStories();
     searchController = TextEditingController();
 
@@ -48,17 +48,6 @@ class _HomePageState extends State<HomePage> {
         _loadMoreStories();
       }
     });
-  }
-
-  void _loadFavoriteStories() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String>? favoriteStoriesList = prefs.getStringList('favoriteStories');
-    if (favoriteStoriesList != null) {
-      setState(() {
-        favoriteStories =
-            favoriteStoriesList.map((id) => int.parse(id)).toSet();
-      });
-    }
   }
 
   void _loadOfflineStories() async {
@@ -136,15 +125,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _toggleFavorite(int storyId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       if (favoriteStories.contains(storyId)) {
         favoriteStories.remove(storyId);
       } else {
         favoriteStories.add(storyId);
       }
-      prefs.setStringList('favoriteStories',
-          favoriteStories.map((id) => id.toString()).toList());
     });
   }
 

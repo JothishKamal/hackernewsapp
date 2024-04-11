@@ -24,6 +24,13 @@ class _OfflinePageState extends State<OfflinePage> {
   Widget build(BuildContext context) {
     List<int> offlineStoryIds = widget.offlineStories.toList();
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          'Favorites',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
       body: offlineStoryIds.isEmpty
           ? const Center(
               child: Text(
@@ -46,7 +53,8 @@ class _OfflinePageState extends State<OfflinePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => StoryDetailsPage(result: story, isOffline: true),
+                        builder: (context) =>
+                            StoryDetailsPage(result: story, isOffline: true),
                       ),
                     );
                   },
@@ -89,8 +97,7 @@ class _OfflinePageState extends State<OfflinePage> {
                               IconButton(
                                 icon: Icon(isOffline
                                     ? Icons.cloud_done
-                                    : Icons
-                                        .cloud_download),
+                                    : Icons.cloud_download),
                                 onPressed: () {
                                   _toggleOffline(storyId);
                                 },

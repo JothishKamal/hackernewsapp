@@ -149,12 +149,8 @@ class _HomePageState extends State<HomePage> {
         prefs.setString('offlineStory_$storyId', jsonEncode(storyDetails));
         _updateOfflineStoriesMap(storyId, storyDetails);
       } catch (e) {
-        // Handle the error (e.g., show a SnackBar, log the error)
         _showError('Error caching webpage: $e');
-        // Remove the story from offlineStories if caching fails
         offlineStories.remove(storyId);
-        // Optionally, you could rethrow the error to propagate it up
-        // throw e;
       }
     }
   }

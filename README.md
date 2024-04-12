@@ -8,11 +8,11 @@ A HackerNews Application built using Flutter.
 
 - Story Details with threaded comments.
 
-- User Profiles with submissions, comments, creation date and karma points. (TODO: Changes)
+- User Profiles with submissions, comments, creation date and karma points.
 
 ## Additional Features
 
-- Searching (TODO)
+- Searching
 
 - Favorites
 

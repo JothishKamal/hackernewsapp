@@ -35,7 +35,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: _appBar(),
+        appBar: _buildAppBar(),
         body: FutureBuilder<User>(
           future: _userFuture,
           builder: (context, snapshot) {
@@ -116,7 +116,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
     );
   }
 
-  AppBar _appBar() {
+  AppBar _buildAppBar() {
     return AppBar(
       centerTitle: true,
       backgroundColor: const Color.fromRGBO(255, 100, 4, 1),

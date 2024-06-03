@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Poppins',
-        colorScheme: ColorScheme.fromSwatch().copyWith(secondary: const Color.fromRGBO(255, 100, 4, 1)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(255, 100, 4, 1)),
         useMaterial3: true,
       ),
       home: const HomePage(),
